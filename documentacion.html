@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Documentación - GNA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-100">
+
+    <header class="header-gna shadow-lg sticky top-0 z-40">
+        <div class="flex items-center gap-4 px-4">
+            <button onclick="toggleMenu()" class="lg:hidden p-2 text-white text-2xl">☰</button>
+            <div class="logo-circular">
+                <img src="logo.jpeg" alt="logo">
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold uppercase tracking-widest">
+                Educación Física GNA
+            </h1>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar-menu fixed lg:static inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
+            <div class="p-6">
+                <nav class="space-y-3">
+                    <a href="index.html" class="btn-menu block">🏠 Inicio</a>
+                    <a href="index.html?openModal=true" class="btn-menu block">📋 Carga de Asistencia</a>
+                    <button onclick="solicitarAcceso('estadisticas.html')" class="btn-menu w-full text-left">📊 Estadísticas</button>
+                    <button onclick="solicitarAcceso('documentacion.html')" class="btn-menu w-full text-left">📁 Control Documentación</button>
+                    <a href="videos.html" class="btn-menu block">🎥 Videos</a>
+                    <a href="https://chat.whatsapp.com/G9AvEEggkDR5kOkhcizbew?mode=gi_t" target="_blank" class="btn-menu flex items-center gap-2 bg-green-600 hover:bg-green-500 border-l-4 border-yellow-500"><span>💬</span> WhatsApp Región III</a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="main-content w-full p-4 md:p-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md border-b-4 border-green-800 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-green-900">Registros de Clases Cargados</h2>
+                            <p class="text-gray-600">Historial en tiempo real de la información cargada en el sistema.</p>
+                        </div>
+                        <div class="relative w-full md:w-96">
+                            <input type="text" id="buscadorDoc" onkeyup="filtrarTablaDoc()" 
+                                   placeholder="Buscar por Profesor, Unidad o Tema..." 
+                                   class="w-full p-3 pl-10 border-2 border-green-800 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none">
+                            <span class="absolute left-3 top-3.5">🔍</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse" id="tablaDocumentacion">
+                            <thead>
+                                <tr class="bg-green-900 text-white">
+                                    <th class="p-4">Fecha</th>
+                                    <th class="p-4">Unidad</th>
+                                    <th class="p-4">Instructor</th>
+                                    <th class="p-4">Tema</th>
+                                    <th class="p-4 text-center">Asistentes</th>
+                                    <th class="p-4">Novedades</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoTablaDoc" class="text-gray-700">
+                                <tr>
+                                    <td colspan="6" class="p-8 text-center text-gray-400">Cargando registros...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <script src="script.js"></script>
+    <script>
+        // Lógica específica para cargar los datos de Firebase en esta página
+        document.addEventListener('DOMContentLoaded', () => {
+            if (db) {
+                db.collection("registros_clase").orderBy("creadoEn", "desc")
+                .onSnapshot((querySnapshot) => {
+                    const tbody = document.getElementById('cuerpoTablaDoc');
+                    tbody.innerHTML = "";
+                    
+                    if (querySnapshot.empty) {
+                        tbody.innerHTML = "<tr><td colspan='6' class='p-8 text-center'>No hay registros guardados.</td></tr>";
+                        return;
+                    }
+
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const tr = document.createElement('tr');
+                        tr.className = "border-b hover:bg-gray-50 transition-colors";
+                        tr.innerHTML = `
+                            <td class="p-4 font-semibold">${data.fecha || '-'}</td>
+                            <td class="p-4">${data.unidad || '-'}</td>
+                            <td class="p-4">${data.jerarquia || ''} ${data.profesor || '-'}</td>
+                            <td class="p-4 text-sm">${data.tema || '-'}</td>
+                            <td class="p-4 text-center font-bold text-green-800">${data.totalAsistentes || '0'}</td>
+                            <td class="p-4 text-xs italic text-gray-500">${data.novedades || 'Sin novedades'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
+            }
+        });
+
+        function filtrarTablaDoc() {
+            const query = document.getElementById('buscadorDoc').value.toLowerCase();
+            const rows = document.querySelectorAll('#cuerpoTablaDoc tr');
+            rows.forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? "" : "none";
+            });
+        }
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

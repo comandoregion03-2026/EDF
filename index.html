@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educación Física GNA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-gray-100">
+
+    <header class="header-gna shadow-lg sticky top-0 z-40">
+        <div class="flex items-center gap-4">
+            <button onclick="toggleMenu()" class="lg:hidden p-2 text-white text-2xl">☰</button>
+            <div class="logo-circular"><span><img src="logo.jpeg" alt="logo"></span></div>
+            <h1 class="text-xl md:text-2xl font-bold tracking-widest uppercase">Educación Física GNA</h1>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar-menu fixed lg:static inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
+            <nav class="space-y-3 p-4">
+                <button onclick="openModal()" class="btn-menu">📋 Carga de Asistencia</button>
+                <a href="biblioteca.html" class="btn-menu block text-center lg:text-left">📚 Biblioteca</a>
+                <button onclick="solicitarAcceso('estadisticas.html')" class="btn-menu w-full text-left">📊 Estadísticas</button>
+                <button onclick="solicitarAcceso('documentacion.html')" class="btn-menu w-full text-left">📁 Control Documentación</button>
+                <a href="videos.html" class="btn-menu block text-center lg:text-left">🎥 Videos</a>
+                <a href="https://chat.whatsapp.com/G9AvEEggkDR5kOkhcizbew?mode=gi_t" target="_blank" class="btn-menu flex items-center gap-2 bg-green-600 hover:bg-green-500 border-l-4 border-yellow-500"><span>💬</span> WhatsApp Región III</a>
+                <button onclick="window.close()" class="btn-menu btn-exit">❌ Cerrar Aplicación</button>
+            </nav>
+        </aside>
+
+        <main class="main-content w-full">
+            <div class="video-section max-w-4xl mx-auto">
+                <h2 class="text-2xl font-bold mb-4 text-green-900 border-b-2 border-yellow-500 pb-2">Video Informativo</h2>
+                <div class="aspect-video bg-black rounded-lg flex items-center justify-center text-white mb-4 shadow-inner">
+                    <span class="text-gray-400 italic">[Espacio para Video de Instrucción]</span>
+                </div>
+                <p class="text-gray-700 leading-relaxed">
+                    Bienvenido al portal de Educación Física. Registre asistencia, consulte normativa y visualice estadísticas operativas.
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <div id="modalAsistencia" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button onclick="closeModal()" class="close-x">&times;</button>
+            <h2 class="text-2xl font-bold text-green-900 mb-6 border-b-2 border-green-800">Registro de Clase</h2>
+            
+            <form id="formAsistencia" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group">
+                    <label class="block font-bold mb-1">Unidad (Córdoba)</label>
+                    <select id="unidad" class="input-field" required>
+                        <option value="">Seleccione Unidad...</option>
+                        <option>Agrupación XX "Córdoba"</option>
+                        <option>Escuadrón 65 "Córdoba"</option>
+                        <option>Escuadrón Seguridad Vial "Santa Catalina"</option>
+                        <option>Escuadrón Seguridad Vial "Villa María"</option>
+                        <option>Escuadrón 64 "Recreo" (Sección Córdoba)</option>
+                        <option>Unidad de Procedimientos Judiciales "Córdoba"</option>
+                        <option>Destacamento Móvil 3 "Jesús María"</option>
+                        <option>Escuadrón Núcleo "Jesús María"</option>
+                        <option>Escuela de Suboficiales "Cabo Raúl Remberto Cuello"</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="block font-bold mb-1">Jerarquía del Instructor</label>
+                    <select id="jerarquia" class="input-field" required>
+                        <option value="">Seleccione Jerarquía...</option>
+                        <optgroup label="Oficiales">
+                            <option>Comandante General</option>
+                            <option>Comandante Mayor</option>
+                            <option>Comandante Principal</option>
+                            <option>Comandante</option>
+                            <option>Segundo Comandante</option>
+                            <option>Primer Alférez</option>
+                            <option>Alférez</option>
+                            <option>Subalférez</option>
+                        </optgroup>
+                        <optgroup label="Suboficiales">
+                            <option>Suboficial Mayor</option>
+                            <option>Suboficial Principal</option>
+                            <option>Sargento Ayudante</option>
+                            <option>Sargento Primero</option>
+                            <option>Sargento</option>
+                            <option>Cabo Primero</option>
+                            <option>Cabo</option>
+                        </optgroup>
+                        <option>Gendarme</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-2 form-group">
+                    <label class="block font-bold mb-1">Nombre y Apellido del Profesor</label>
+                    <input type="text" id="profesor" class="input-field" placeholder="Nombre completo" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="block font-bold mb-1">Fecha</label>
+                    <input type="date" id="fecha" class="input-field" required>
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="w-1/2"><label class="block font-bold mb-1">Inicio</label><input type="time" id="hInicio" class="input-field"></div>
+                    <div class="w-1/2"><label class="block font-bold mb-1">Fin</label><input type="time" id="hFin" class="input-field"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="block font-bold mb-1">Fuerza Efectiva</label>
+                    <input type="number" id="fuerzaEfectiva" class="input-field font-bold text-green-800" oninput="sumarTotales()">
+                </div>
+
+                <div class="md:col-span-2 overflow-x-auto mt-4">
+                    <table class="table-asistencia">
+                        <thead>
+                            <tr class="bg-green-900 text-white">
+                                <th>Categoría</th>
+                                <th>Efectivo</th>
+                                <th>Presente</th>
+                                <th>Ausente</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCuerpo"></tbody>
+                        <tfoot>
+                            <tr class="bg-gray-200 font-bold" id="filaTotales">
+                                <td>TOTAL</td>
+                                <td id="totalCant">0</td>
+                                <td id="totalPres">0</td>
+                                <td id="totalAus">0</td>
+                                <td id="totalGral">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="md:col-span-2 form-group mt-4">
+                    <label class="block font-bold mb-1">Tema Impartido</label>
+                    <textarea id="tema" class="input-field h-20" placeholder="Ej: Defensa Personal, Acondicionamiento Físico..." required></textarea>
+                </div>
+
+                <div class="md:col-span-2 form-group">
+                    <label class="block font-bold mb-1">Novedades</label>
+                    <textarea id="novedades" class="input-field h-20" placeholder="Registre novedades del servicio o personal..."></textarea>
+                </div>
+
+                <div class="md:col-span-2 flex justify-end flex-wrap gap-3 mt-6">
+                    <button type="button" onclick="descargarPDF()" class="px-4 py-2 bg-red-700 text-white rounded-lg font-bold hover:bg-red-800 transition-colors">📄 Descargar PDF</button>
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-400 text-white rounded-lg">Cancelar</button>
+                    <button type="button" onclick="guardarDatos()" class="btn-save shadow-md">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalLogin" class="modal-overlay hidden">
+        <div class="modal-content max-w-md">
+            <h2 class="text-xl font-bold text-green-900 mb-4 border-b-2 border-yellow-500">Validación de Identidad</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold">M.I.</label>
+                    <input type="password" id="loginMI" class="input-field" placeholder="Ingrese M.I.">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold">C.E.</label>
+                    <input type="password" id="loginCE" class="input-field" placeholder="Ingrese C.E.">
+                </div>
+                <div id="loginError" class="text-red-600 text-sm font-bold hidden">Acceso denegado.</div>
+                <div class="flex justify-end gap-2">
+                    <button onclick="closeLoginModal()" class="px-4 py-2 bg-gray-300 rounded">Cerrar</button>
+                    <button onclick="verificarAcceso()" class="px-4 py-2 bg-green-800 text-white rounded font-bold">Ingresar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <div id="modalLogin" class="modal-overlay hidden">
+        <div class="modal-content max-w-md">
+            <h2 class="text-xl font-bold text-green-900 mb-4 border-b-2 border-yellow-500">Validación de Identidad</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold">M.I.</label>
+                    <input type="password" id="loginMI" class="input-field" placeholder="Ingrese M.I.">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold">C.E.</label>
+                    <input type="password" id="loginCE" class="input-field" placeholder="Ingrese C.E.">
+                </div>
+                <div id="loginError" class="text-red-600 text-sm font-bold hidden">Acceso denegado.</div>
+                <div class="flex justify-end gap-2">
+                    <button onclick="closeLoginModal()" class="px-4 py-2 bg-gray-300 rounded">Cerrar</button>
+                    <button onclick="verificarAcceso()" class="px-4 py-2 bg-green-800 text-white rounded font-bold">Ingresar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

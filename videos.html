@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videos Instructivos GNA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100">
+
+    <header class="header-gna shadow-lg sticky top-0 z-40">
+        <div class="flex items-center gap-4 px-4">
+            <button onclick="toggleMenu()" class="lg:hidden p-2 text-white text-2xl">☰</button>
+            <div class="logo-circular">
+                <img src="logo.jpeg" alt="logo">
+            </div>
+            <h1 class="text-xl md:text-2xl font-bold uppercase tracking-widest">
+                Educación Física GNA
+            </h1>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="sidebar-menu fixed lg:static inset-y-0 left-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
+            <div class="p-6">
+                <nav class="space-y-3">
+                    <a href="index.html" class="btn-menu block">🏠 Inicio</a>
+                    <a href="index.html?openModal=true" class="btn-menu block">📋 Carga de Asistencia</a>
+                    <button onclick="solicitarAcceso('estadisticas.html')" class="btn-menu w-full text-left">📊 Estadísticas</button>
+                    <button onclick="solicitarAcceso('documentacion.html')" class="btn-menu w-full text-left">📁 Control Documentación</button>
+                    <button class="btn-menu bg-yellow-600 text-white font-bold border-l-4 border-white">🎥 Videos</button>
+                    <a href="https://chat.whatsapp.com/G9AvEEggkDR5kOkhcizbew?mode=gi_t" target="_blank" class="btn-menu flex items-center gap-2 bg-green-600 hover:bg-green-500 border-l-4 border-yellow-500"><span>💬</span> WhatsApp Región III</a>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="main-content w-full">
+            <div class="bg-white p-6 rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-green-900 mb-8 border-b-2 border-yellow-500 pb-4">Nuestros Videos Destacados</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="videoGrid">
+                    <div class="video-card bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow border-t-4 border-green-700 overflow-hidden">
+                        <div class="aspect-video bg-black">
+                            <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen class="w-full h-full"></iframe>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2 text-gray-800">Defensa Personal GNA</h3>
+                            <p class="text-sm text-gray-600">Instrucción esencial para situaciones de campo.</p>
+                        </div>
+                    </div>
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="sidebarOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
