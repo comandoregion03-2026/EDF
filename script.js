@@ -1,23 +1,7 @@
-// script.js - Actualización de Seguridad y Persistencia
-const firebaseConfig = {
-    apiKey: "TU_API_KEY", 
-    authDomain: "TU_PROYECTO.firebaseapp.com",
-    projectId: "TU_PROYECTO_ID",
-    storageBucket: "TU_PROYECTO.appspot.com",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
-};
+// script.js - Sistema de Gestión Educación Física GNA
+//
 
-// Inicialización segura
-if (typeof firebase !== 'undefined') {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    var db = firebase.firestore();
-    // Habilitar persistencia local (opcional para modo offline)
-    db.settings({ experimentalForceLongPolling: true }); 
-}
-// 2. CONSTANTES Y DATOS
+// 2. CONSTANTES
 const categorias = ["Of Sup", "Of Jefe", "Of Sub", "Subof Sup", "Subof Sub", "Gendarme"];
 const listaDocumentos = [
     { id: 1, titulo: "Reglamento de Aptitud Física GNA", desc: "Normativas y estándares de evaluación anual." },
@@ -34,11 +18,11 @@ const listaDocumentos = [
     { id: 12, titulo: "Guía de Acondicionamiento en Montaña", desc: "Entrenamiento específico para climas extremos." }
 ];
 
-let destinoAcceso = ""; // Almacena la página de destino para el login
+let destinoAcceso = ""; 
 
-// 3. INICIALIZACIÓN GENERAL
+// 3. INICIALIZACIÓN DE LA INTERFAZ
 document.addEventListener('DOMContentLoaded', () => {
-    // Renderizado de tabla de asistencia en index.html
+    // Renderizado de tabla de asistencia
     const cuerpo = document.getElementById('tablaCuerpo');
     if (cuerpo) {
         categorias.forEach(cat => {
@@ -54,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Renderizado de biblioteca en biblioteca.html
+    // Renderizado de biblioteca
     const grid = document.getElementById('gridDocumentos');
     if (grid) {
         listaDocumentos.forEach(doc => {
@@ -77,139 +61,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Inicialización de gráficos si existen
-    if (document.getElementById('chartSemanal')) {
-        renderCharts();
-    }
-
-    // Manejo de parámetros URL para abrir modales automáticamente
+    // Gráficos y Modales
+    if (document.getElementById('chartSemanal')) renderCharts();
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('openModal') === 'true') openModal();
-    if (urlParams.get('openLogin') === 'true') {
-        destinoAcceso = urlParams.get('destino') || "estadisticas.html";
-        solicitarAcceso(destinoAcceso);
-    }
 });
 
-// 4. LÓGICA DE VALIDACIÓN DE IDENTIDAD (MODAL ÚNICO)
-function solicitarAcceso(pagina) {
-    destinoAcceso = pagina;
-    const modal = document.getElementById('modalLogin');
-    
-    if (modal) {
-        document.getElementById('loginMI').value = "";
-        document.getElementById('loginCE').value = "";
-        document.getElementById('loginError').classList.add('hidden');
-        modal.classList.remove('hidden');
-    } else {
-        // Redirige al index para usar el modal centralizado si no está en la página actual
-        window.location.href = `index.html?openLogin=true&destino=${pagina}`;
-    }
-}
-
-function verificarAcceso() {
-    const mi = document.getElementById('loginMI').value;
-    const ce = document.getElementById('loginCE').value;
-    
-    // Credenciales autorizadas
-    if ((mi === "32559315" && ce === "70965") || (mi === "30819237" && ce === "88908")) {
-        window.location.href = destinoAcceso;
-    } else {
-        const errorMsg = document.getElementById('loginError');
-        if (errorMsg) errorMsg.classList.remove('hidden');
-        else alert("Acceso denegado. Datos incorrectos.");
-    }
-}
-
-function closeLoginModal() {
-    const modal = document.getElementById('modalLogin');
-    if (modal) modal.classList.add('hidden');
-}
-
-// 5. LÓGICA DE ASISTENCIA Y CÁLCULOS
-function calcular(input) {
-    const fila = input.closest('tr');
-    const cantidad = parseInt(fila.querySelector('.row-cant').value) || 0;
-    const presente = parseInt(fila.querySelector('.row-pres').value) || 0;
-
-    const ausente = Math.max(0, cantidad - presente);
-    fila.querySelector('.row-aus').innerText = ausente === 0 ? "-" : ausente;
-    fila.querySelector('.row-total').innerText = (presente + ausente) === 0 ? "-" : (presente + ausente);
-    sumarTotales();
-}
-
-function sumarTotales() {
-    let tCant = 0, tPres = 0, tAus = 0, tGral = 0;
-    const fuerzaEfectiva = parseInt(document.getElementById('fuerzaEfectiva').value) || 0;
-
-    document.querySelectorAll('.row-cant').forEach(i => tCant += parseInt(i.value) || 0);
-    document.querySelectorAll('.row-pres').forEach(i => tPres += parseInt(i.value) || 0);
-    document.querySelectorAll('.row-aus').forEach(i => {
-        let val = parseInt(i.innerText);
-        tAus += isNaN(val) ? 0 : val;
-    });
-    document.querySelectorAll('.row-total').forEach(i => {
-        let val = parseInt(i.innerText);
-        tGral += isNaN(val) ? 0 : val;
-    });
-
-    document.getElementById('totalCant').innerText = tCant;
-    document.getElementById('totalPres').innerText = tPres;
-    document.getElementById('totalAus').innerText = tAus;
-    document.getElementById('totalGral').innerText = tGral;
-
-    const labelCant = document.getElementById('totalCant');
-    if (fuerzaEfectiva > 0 && tCant !== fuerzaEfectiva) {
-        labelCant.classList.add('text-error');
-    } else {
-        labelCant.classList.remove('text-error');
-    }
-}
-
-// 6. GENERACIÓN DE PDF
-function descargarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const verdeGna = [26, 58, 58];
-
-    doc.setFontSize(18);
-    doc.setTextColor(verdeGna[0], verdeGna[1], verdeGna[2]);
-    doc.text("REGISTRO DE ASISTENCIA - GNA", 105, 20, { align: "center" });
-
-    doc.setFontSize(10);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Unidad: ${document.getElementById('unidad').value || "-"}`, 15, 35);
-    doc.text(`Instructor: ${document.getElementById('jerarquia').value || ""} ${document.getElementById('profesor').value || "-"}`, 15, 42);
-    doc.text(`Fecha: ${document.getElementById('fecha').value || "-"}`, 15, 49);
-
-    const headers = [["Categoría", "Efectivo", "Presente", "Ausente", "Total"]];
-    const data = [];
-    
-    document.querySelectorAll('#tablaCuerpo tr').forEach(tr => {
-        const row = [];
-        tr.querySelectorAll('td').forEach((td, index) => {
-            if (index === 1 || index === 2) row.push(td.querySelector('input').value || "0");
-            else row.push(td.innerText);
-        });
-        data.push(row);
-    });
-
-    doc.autoTable({
-        startY: 55,
-        head: headers,
-        body: data,
-        theme: 'grid',
-        headStyles: { fillStyle: verdeGna }
-    });
-
-    doc.save(`Asistencia_${document.getElementById('fecha').value || "GNA"}.pdf`);
-}
-
-// 7. PERSISTENCIA EN NUBE (FIREBASE) CON VALIDACIÓN ESTRICTA
+// 4. FUNCIÓN GUARDAR (CORREGIDA)
 async function guardarDatos() {
     if (!db) return alert("Firebase no configurado");
-    
-    // Captura de todos los campos del formulario
+
+    // Recopilación de datos
     const data = {
         unidad: document.getElementById('unidad').value,
         jerarquia: document.getElementById('jerarquia').value,
@@ -219,68 +81,108 @@ async function guardarDatos() {
         hFin: document.getElementById('hFin').value,
         fuerzaEfectiva: document.getElementById('fuerzaEfectiva').value,
         tema: document.getElementById('tema').value,
-        novedades: document.getElementById('novedades').value,
+        novedades: document.getElementById('novedades').value || "Sin novedades",
         totalAsistentes: document.getElementById('totalGral').innerText,
         creadoEn: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    // Validación: Verifica que ningún campo esté vacío
-    const camposVacios = Object.entries(data).filter(([key, value]) => {
-        if (key === 'creadoEn' || key === 'novedades') return false; // Novedades opcional si lo prefieres, pero aquí se pide todo obligatorio
-        return !value || value.toString().trim() === "" || value === "0";
-    });
-
-    // Validación específica para novedades si se requiere estrictamente
-    if (!data.novedades || data.novedades.trim() === "") {
-        return alert("⚠️ Todos los campos son obligatorios, incluyendo las Novedades (si no hay, escriba 'Sin novedades').");
-    }
-
-    if (camposVacios.length > 0) {
-        return alert("⚠️ Por favor, complete la planilla íntegramente. Todos los campos son obligatorios para el registro.");
+    // Validación de campos obligatorios
+    if (!data.unidad || !data.profesor || !data.fecha || !data.tema) {
+        return alert("⚠️ Por favor complete los campos obligatorios (Unidad, Profesor, Fecha y Tema).");
     }
 
     try {
+        // Guardar en Firestore
         await db.collection("registros_clase").add(data);
-        alert("✅ Registro guardado exitosamente.");
-        closeModal();
+        
+        // Mostrar notificación de éxito
+        mostrarToast("✅ Registro guardado correctamente");
+
+        // LIMPIEZA DE CAMPOS
         document.getElementById('formAsistencia').reset();
+        
+        // Limpiar elementos que no son inputs (celdas de la tabla)
+        document.querySelectorAll('.row-aus, .row-total').forEach(td => td.innerText = "-");
+        document.getElementById('totalCant').innerText = "0";
+        document.getElementById('totalPres').innerText = "0";
+        document.getElementById('totalAus').innerText = "0";
+        document.getElementById('totalGral').innerText = "0";
+
+        closeModal();
     } catch (e) {
         console.error("Error al guardar:", e);
-        alert("❌ Error al guardar en la nube.");
+        alert("❌ Error al guardar en la base de datos.");
     }
 }
 
-// 8. UTILIDADES DE UI
+// 5. NOTIFICACIÓN EMERGENTE (TOAST)
+function mostrarToast(mensaje) {
+    const toast = document.createElement('div');
+    toast.className = "fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-green-900 text-white px-8 py-4 rounded-full shadow-2xl z-[2000] font-bold border-2 border-yellow-500 animate-bounce";
+    toast.innerHTML = mensaje;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+}
+
+// 6. CÁLCULOS DE ASISTENCIA
+function calcular(input) {
+    const fila = input.closest('tr');
+    const cantidad = parseInt(fila.querySelector('.row-cant').value) || 0;
+    const presente = parseInt(fila.querySelector('.row-pres').value) || 0;
+
+    const ausente = Math.max(0, cantidad - presente);
+    fila.querySelector('.row-aus').innerText = ausente || "-";
+    fila.querySelector('.row-total').innerText = (presente + ausente) || "-";
+    sumarTotales();
+}
+
+function sumarTotales() {
+    let tCant = 0, tPres = 0, tAus = 0, tGral = 0;
+    document.querySelectorAll('.row-cant').forEach(i => tCant += parseInt(i.value) || 0);
+    document.querySelectorAll('.row-pres').forEach(i => tPres += parseInt(i.value) || 0);
+    document.querySelectorAll('.row-aus').forEach(i => tAus += parseInt(i.innerText) || 0);
+    document.querySelectorAll('.row-total').forEach(i => tGral += parseInt(i.innerText) || 0);
+
+    document.getElementById('totalCant').innerText = tCant;
+    document.getElementById('totalPres').innerText = tPres;
+    document.getElementById('totalAus').innerText = tAus;
+    document.getElementById('totalGral').innerText = tGral;
+}
+
+// 7. UTILIDADES DE NAVEGACIÓN
 function toggleMenu() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('-translate-x-full');
-    overlay.classList.toggle('hidden');
+    document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.toggle('hidden');
 }
 
-function openModal() { 
-    const modal = document.getElementById('modalAsistencia');
-    if (modal) modal.classList.remove('hidden');
-    else window.location.href = "index.html?openModal=true";
+function openModal() { document.getElementById('modalAsistencia').classList.remove('hidden'); }
+function closeModal() { document.getElementById('modalAsistencia').classList.add('hidden'); }
+
+function solicitarAcceso(pagina) {
+    destinoAcceso = pagina;
+    document.getElementById('modalLogin').classList.remove('hidden');
 }
 
-function closeModal() { 
-    const modal = document.getElementById('modalAsistencia');
-    if (modal) modal.classList.add('hidden'); 
+function verificarAcceso() {
+    const mi = document.getElementById('loginMI').value;
+    const ce = document.getElementById('loginCE').value;
+    if ((mi === "32559315" && ce === "70965") || (mi === "30819237" && ce === "88908")) {
+        window.location.href = destinoAcceso;
+    } else {
+        document.getElementById('loginError').classList.remove('hidden');
+    }
 }
 
-function filtrarDocumentos() {
-    const query = document.getElementById('buscador').value.toLowerCase();
-    const cards = document.querySelectorAll('.documento-card');
-    cards.forEach(card => {
-        card.style.display = card.innerText.toLowerCase().includes(query) ? "flex" : "none";
-    });
-}
+function closeLoginModal() { document.getElementById('modalLogin').classList.add('hidden'); }
 
-// 9. GRÁFICOS (ESTADÍSTICAS)
+// 8. GRÁFICOS
 function renderCharts() {
     const commonOptions = { responsive: true, maintainAspectRatio: false };
-
     new Chart(document.getElementById('chartSemanal'), {
         type: 'bar',
         data: {
@@ -289,16 +191,79 @@ function renderCharts() {
         },
         options: commonOptions
     });
-
-    new Chart(document.getElementById('chartCategorias'), {
-        type: 'bar',
-        data: {
-            labels: categorias,
-            datasets: [
-                { label: 'Presentes', data: [12, 18, 30, 45, 80, 120], backgroundColor: '#15803d' },
-                { label: 'Ausentes', data: [2, 4, 5, 10, 15, 20], backgroundColor: '#ef4444' }
-            ]
-        },
-        options: { indexAxis: 'y', scales: { x: { stacked: true }, y: { stacked: true } }, ...commonOptions }
-    });
 }
+
+async function guardarDatos() {
+    if (!window.db) return alert("Firebase no configurado");
+
+    const { collection, addDoc, serverTimestamp } = window.firestoreLib;
+
+    const data = {
+        unidad: document.getElementById('unidad').value,
+        jerarquia: document.getElementById('jerarquia').value,
+        profesor: document.getElementById('profesor').value,
+        fecha: document.getElementById('fecha').value,
+        hInicio: document.getElementById('hInicio').value,
+        hFin: document.getElementById('hFin').value,
+        fuerzaEfectiva: document.getElementById('fuerzaEfectiva').value,
+        tema: document.getElementById('tema').value,
+        novedades: document.getElementById('novedades').value || "Sin novedades",
+        totalAsistentes: document.getElementById('totalGral').innerText,
+        creadoEn: serverTimestamp() // Usamos la versión modular
+    };
+
+    if (!data.unidad || !data.profesor || !data.fecha || !data.tema) {
+        return alert("⚠️ Por favor complete los campos obligatorios.");
+    }
+
+    try {
+        // Nueva sintaxis modular: addDoc(coleccion, data)
+        await addDoc(collection(window.db, "registros_clase"), data);
+        
+        mostrarToast("✅ Registro guardado correctamente");
+        document.getElementById('formAsistencia').reset();
+        
+        document.querySelectorAll('.row-aus, .row-total').forEach(td => td.innerText = "-");
+        ["totalCant", "totalPres", "totalAus", "totalGral"].forEach(id => document.getElementById(id).innerText = "0");
+
+        closeModal();
+    } catch (e) {
+        console.error("Error al guardar:", e);
+        alert("❌ Error al guardar en la base de datos.");
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Esperar un momento a que Firebase se inicialice
+    setTimeout(() => {
+        if (window.db) {
+            const { collection, query, orderBy, onSnapshot } = window.firestoreLib;
+            const q = query(collection(window.db, "registros_clase"), orderBy("creadoEn", "desc"));
+            
+            onSnapshot(q, (querySnapshot) => {
+                const tbody = document.getElementById('cuerpoTablaDoc');
+                tbody.innerHTML = "";
+                
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = "<tr><td colspan='6' class='p-8 text-center'>No hay registros guardados.</td></tr>";
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b hover:bg-gray-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-4 font-semibold">${data.fecha || '-'}</td>
+                        <td class="p-4">${data.unidad || '-'}</td>
+                        <td class="p-4">${data.jerarquia || ''} ${data.profesor || '-'}</td>
+                        <td class="p-4 text-sm">${data.tema || '-'}</td>
+                        <td class="p-4 text-center font-bold text-green-800">${data.totalAsistentes || '0'}</td>
+                        <td class="p-4 text-xs italic text-gray-500">${data.novedades || 'Sin novedades'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+    }, 1000); 
+});
